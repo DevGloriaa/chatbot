@@ -44,7 +44,7 @@ npm start
 - **package.json** – Project dependencies and scripts.  
 - **README.md** – Project documentation.
 
-##🤝 Contributing
+# 🤝 Contributing
 
 # 1. Fork the repository
 
