@@ -1,25 +1,40 @@
 import React, { useState } from "react";
 import "../styles/chatbot.css";
 
-
 function Chat() {
     const [messages, setMessages] = useState([
         { text: "Hello! I’m Kos 🤖. How can I help you today?", sender: "bot" },
     ]);
     const [input, setInput] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (input.trim() === "") return;
 
-        setMessages([...messages, { text: input, sender: "user" }]);
+        setMessages((prev) => [...prev, { text: input, sender: "user" }]);
+        const userMessage = input;
         setInput("");
+        setIsLoading(true);
 
-        setTimeout(() => {
+        try {
+            const response = await fetch("http://localhost:8080/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userMessage }),
+            });
+
+            if (!response.ok) throw new Error("API request failed");
+
+            const data = await response.json();
+            setMessages((prev) => [...prev, { text: data.message, sender: "bot" }]);
+        } catch (error) {
             setMessages((prev) => [
                 ...prev,
-                { text: "I'm still learning but I hear you 😊", sender: "bot" },
+                { text: "Sorry, I couldn’t respond. 😢", sender: "bot" },
             ]);
-        }, 1000);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -33,6 +48,7 @@ function Chat() {
                         {msg.text}
                     </div>
                 ))}
+                {isLoading && <div className="message bot">Kos is typing...</div>}
             </div>
 
             <div className="input-container">
