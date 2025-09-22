@@ -21,7 +21,7 @@ Follow these steps to run Kos locally:
 
 # 1. Clone the repository
 ```
-git clone https://github.com/yourusername/kos-chatbot.git
+git clone https://github.com/DevGloriaa/chatbot.git
 cd kos-chatbot
 ```
 
