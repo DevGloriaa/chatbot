@@ -46,24 +46,24 @@ npm start
 
 # 🤝 Contributing
 
-* 1. Fork the repository
+* Fork the repository
 
-* 2. Create a new branch
+* Create a new branch
 ```
 git checkout -b feature-name
 ```
 
-* 3. Make your changes and commit
+*  Make your changes and commit
 ```
 git commit -m "Add feature"
 
 ```
 
-* 4. Push to the branch
+*  Push to the branch
 ```
 git push origin feature-name
 
 ```
 
-* 5. Open a Pull Request
+*  Open a Pull Request
         
