@@ -17,11 +17,15 @@ function Chat() {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8080/api/chat", {
+            const response = await fetch("http://localhost:8000/api/chat", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJnbG8ub2Jpb3JhaEBnbWFpbC5jb20iLCJpYXQiOjE3NTg3MzM3OTYsImV4cCI6MTc1ODgyMDE5Nn0.fjecDY_UYbyamxwnUoG5eeaNXZaVptuvi5UrLD_zRKs"
+                },
                 body: JSON.stringify({ message: userMessage }),
             });
+
 
             if (!response.ok) throw new Error("API request failed");
 

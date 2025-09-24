@@ -9,7 +9,7 @@ function Home() {
             <div className="hero">
                 <h1 className="hero-title">Welcome to Kos 🤖</h1>
                 <p className="hero-subtitle">
-                    Your personal chatbot built with React. Start chatting now!
+                    Your personal chatbot and assistant. Start chatting now!
                 </p>
                 <Link to="/chat" className="hero-button">
                     Start Chatting
