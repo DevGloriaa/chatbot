@@ -4,6 +4,13 @@
     height: 100vh;
     background: beige;
 }
+.task-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
 
 .messages {
     flex: 1;
