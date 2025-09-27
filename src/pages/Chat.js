@@ -12,7 +12,7 @@ function Chat() {
     useEffect(() => {
         const fetchTasks = async () => {
             try {
-                const response = await fetch("http://localhost:8080/api/tasks/today");
+                const response = await fetch("http://localhost:8000/api/tasks/today");
                 if (!response.ok) throw new Error("Failed to fetch tasks");
                 const data = await response.json();
                 setTasks(data);
@@ -35,7 +35,7 @@ function Chat() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJnbG8ub2Jpb3JhaEBnbWFpbC5jb20iLCJpYXQiOjE3NTg3NTE4MzQsImV4cCI6MTc1ODgzODIzNH0.0iyxOuRwQN27YPiWrS0xye1Uyez2W-z-9JRvbhLqkkw"
+                    "Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJnbG8ub2Jpb3JhaEBnbWFpbC5jb20iLCJpYXQiOjE3NTg3NTM3OTIsImV4cCI6MTc1ODg0MDE5Mn0.5x8xyftHxVF2OFHBmqyyZuIZ-e_Hc27d-8O46wy80OQ"
                 },
                 body: JSON.stringify({ message: userMessage }),
             });
