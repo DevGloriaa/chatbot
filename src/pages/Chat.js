@@ -36,7 +36,9 @@ function Chat() {
                     ]);
                 } else {
                     const taskList = data.tasks
-                        .map((task, i) => `${i + 1}. ${task.title} ${task.dueDate ? `(📅 ${task.dueDate})` : ""}`)
+                        .map((task, i) =>
+                            `${i + 1}. ${task.title}${task.dueDate ? ` (📅 ${task.dueDate})` : ""}`
+                        )
                         .join("\n");
 
                     setMessages((prev) => [
