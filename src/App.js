@@ -1,16 +1,13 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home.js";
-import Chat from "./pages/Chat.js";
+import Header from "./components/Header";
+import Chat from "./components/Chat";
 
 function App() {
     return (
-        <Router>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/chat" element={<Chat />} />
-            </Routes>
-        </Router>
+        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-black dark:text-white">
+            <Header />
+            <Chat />
+        </div>
     );
 }
 
