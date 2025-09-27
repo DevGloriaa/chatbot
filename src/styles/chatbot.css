@@ -29,26 +29,17 @@ body, .chat-container {
     transition: background 0.3s ease, color 0.3s ease;
 }
 
-
 .toggle-btn {
-    background: var(--bg-color);
+    background: none;
     color: var(--text-color);
-    border: 2px solid var(--text-color);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: none;
+    font-size: 1.4rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease;
 }
-
 .toggle-btn:hover {
-    transform: rotate(20deg);
+    transform: scale(1.2);
 }
-
 .messages {
     flex: 1;
     overflow-y: auto;
@@ -57,7 +48,6 @@ body, .chat-container {
     flex-direction: column;
     gap: 10px;
 }
-
 .message {
     max-width: 60%;
     padding: 10px 15px;
@@ -109,4 +99,23 @@ body, .chat-container {
 
 .send-button:hover {
     background: #005bb5;
+}
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 15px;
+    border-bottom: 1px solid #ddd;
+    background: var(--bg-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 50px;
+}
+
+.chat-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
 }

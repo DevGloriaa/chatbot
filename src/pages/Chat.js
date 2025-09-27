@@ -69,8 +69,8 @@ function Chat() {
     return (
         <div className="chat-container">
             {/* Header */}
-            <div className="chat-header">
-                <h2 className="chat-title">Kos 🤖</h2>
+            <div className="chat-header flex justify-between items-center px-4 py-3 shadow-md bg-white dark:bg-gray-800">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Kos 🤖</h2>
                 <ThemeToggle />
             </div>
 
