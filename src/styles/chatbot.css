@@ -12,6 +12,43 @@
     background-color: #f9f9f9;
 }
 
+html.light {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+}
+
+html.dark {
+    --bg-color: #121212;
+    --text-color: #f5f5f5;
+}
+
+
+body, .chat-container {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+
+.toggle-btn {
+    background: var(--bg-color);
+    color: var(--text-color);
+    border: 2px solid var(--text-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    transform: rotate(20deg);
+}
+
 .messages {
     flex: 1;
     overflow-y: auto;

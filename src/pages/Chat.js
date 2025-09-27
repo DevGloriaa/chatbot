@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "../styles/chatbot.css";
+import ThemeToggle from "../components/ThemeToggle";
 
 function Chat() {
     const [messages, setMessages] = useState([
@@ -47,7 +48,6 @@ function Chat() {
                     ]);
                 }
             } else {
-
                 setMessages((prev) => [...prev, { text: data.message, sender: "bot" }]);
             }
         } catch (error) {
@@ -59,6 +59,11 @@ function Chat() {
 
     return (
         <div className="chat-container">
+            <div className="chat-header">
+                <h2>Kos 🤖</h2>
+                <ThemeToggle />
+            </div>
+
             <div className="messages">
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.sender === "user" ? "user" : "bot"}`}>
