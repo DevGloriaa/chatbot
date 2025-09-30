@@ -126,6 +126,7 @@ body,
     z-index: 1000;
     height: 40px;
     background-color:#1e3a8a ;
+    color: white;
 }
 
 .chat-title {
