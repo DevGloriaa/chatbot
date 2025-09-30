@@ -1,19 +1,115 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/Home.css";
 
-
 function Home() {
+    const [isLogin, setIsLogin] = useState(true);
+    const [formData, setFormData] = useState({
+        username: "",
+        displayName: "",
+        password: "",
+    });
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        try {
+            const endpoint = isLogin
+                ? "http://localhost:8000/auth/login"
+                : "http://localhost:8000/auth/register";
+
+            const body = isLogin
+                ? { username: formData.username, password: formData.password }
+                : {
+                    username: formData.username,
+                    displayName: formData.displayName,
+                    password: formData.password,
+                };
+
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to authenticate");
+            }
+
+            const data = await response.json();
+
+
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+
+            navigate("/chat");
+        } catch (err) {
+            setError(err.message || "Something went wrong");
+        }
+    };
+
     return (
         <div className="home-container">
             <div className="hero">
                 <h1 className="hero-title">Welcome to Kos 🤖</h1>
                 <p className="hero-subtitle">
-                    Your personal chatbot and assistant. Start chatting now!
+                    Your personal chatbot and assistant. Register or login to continue!
                 </p>
-                <Link to="/chat" className="hero-button">
-                    Start Chatting
-                </Link>
+            </div>
+
+            <div className="auth-section">
+                <h2>{isLogin ? "Login" : "Register"}</h2>
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        name="username"
+                        placeholder="Username"
+                        value={formData.username}
+                        onChange={handleChange}
+                        required
+                    />
+                    {!isLogin && (
+                        <input
+                            type="text"
+                            name="displayName"
+                            placeholder="Display Name"
+                            value={formData.displayName}
+                            onChange={handleChange}
+                            required
+                        />
+                    )}
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                    />
+                    <button type="submit">
+                        {isLogin ? "Login" : "Register"}
+                    </button>
+                </form>
+                {error && <p className="error">{error}</p>}
+                <p>
+                    <div className="toggle">
+                        {isLogin ? "Don’t have an account?" : "Already have an account?"}{" "}
+                        <span onClick={() => setIsLogin(!isLogin)}>
+                         {isLogin ? "Register here" : "Login here"}
+                      </span>
+                    </div>
+                </p>
             </div>
         </div>
     );

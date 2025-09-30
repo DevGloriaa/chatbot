@@ -1,13 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/chatbot.css";
 import ThemeToggle from "../components/ThemeToggle";
 
 function Chat() {
-    const [messages, setMessages] = useState([
-        { text: "Hello! I’m Kos 🤖. How can I help you today?", sender: "bot" },
-    ]);
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [user, setUser] = useState(null);
+
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem("theme") || "light";
+        document.documentElement.className = savedTheme;
+    }, []);
+
+  
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+
+            setMessages([
+                {
+                    text: `Hi ${parsedUser.displayName}, what can I do for you today? 🤖`,
+                    sender: "bot",
+                },
+            ]);
+        } else {
+            setMessages([
+                { text: "Hello! I’m Kos 🤖. Please log in to continue.", sender: "bot" },
+            ]);
+        }
+    }, []);
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -22,7 +47,7 @@ function Chat() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization":
+                    Authorization:
                         "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJnbG8ub2Jpb3JhaEBnbWFpbC5jb20iLCJpYXQiOjE3NTkwMTMzOTUsImV4cCI6MTc1OTA5OTc5NX0.DdGCr6RjenEzOQ2mKtnU1nAA_g7oOYO0niWVDZWljdE",
                 },
                 body: JSON.stringify({ message: userMessage }),
@@ -68,13 +93,11 @@ function Chat() {
 
     return (
         <div className="chat-container">
-            {/* Header */}
-            <div className="chat-header flex justify-between items-center px-4 py-3 shadow-md bg-white dark:bg-gray-800">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Kos 🤖</h2>
+            <div className="chat-header">
+                <h2 className="chat-title">Kos 🤖</h2>
                 <ThemeToggle />
             </div>
 
-            {/* Messages */}
             <div className="messages">
                 {messages.map((msg, index) => (
                     <div
@@ -89,20 +112,21 @@ function Chat() {
                 {isLoading && <div className="message bot typing">Kos is typing...</div>}
             </div>
 
-            {/* Input */}
-            <div className="input-container">
-                <input
-                    type="text"
-                    className="chat-input"
-                    placeholder="Type a message..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                />
-                <button onClick={handleSend} className="send-button">
-                    Send
-                </button>
-            </div>
+            {user && (
+                <div className="input-container">
+                    <input
+                        type="text"
+                        className="chat-input"
+                        placeholder="Type a message..."
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    />
+                    <button onClick={handleSend} className="send-button">
+                        Send
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

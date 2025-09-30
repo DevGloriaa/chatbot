@@ -1,39 +1,128 @@
 .home-container {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    height: 100vh;
-    background: linear-gradient(135deg, #cde5ff, #a3c8f0);
-    text-align: center;
+    min-height: 100vh;
+    padding: 40px;
+    background: linear-gradient(135deg, #1a1a1a, #2b2e33, #0a2540);
+    color: #f5f5f5;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .hero {
-    max-width: 500px;
+    flex: 1;
+    padding-right: 40px;
 }
 
 .hero-title {
-    font-size: 3rem;
-    font-weight: bold;
-    color: #1a1a1a;
-    margin-bottom: 20px;
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 25px;
+    color: #ffffff;
+    text-shadow: 0 4px 20px rgba(0, 122, 255, 0.6);
+    letter-spacing: 1.5px;
 }
 
 .hero-subtitle {
-    font-size: 1.2rem;
-    color: #333;
-    margin-bottom: 30px;
+    font-size: 1.5rem;
+    line-height: 1.8;
+    color: #d0d0d0;
+    font-weight: 500;
+    max-width: 600px;
 }
 
-.hero-button {
-    background-color: #007aff;
+
+
+.auth-section {
+    flex: 0 0 350px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.auth-section h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #61dafb;
+}
+
+.auth-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.auth-section input {
+    padding: 12px 15px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #f5f5f5;
+    transition: border 0.3s ease, background 0.3s ease;
+}
+
+.auth-section input:focus {
+    border-color: #61dafb;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.auth-section button {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #007aff;
     color: white;
-    padding: 12px 24px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-size: 1rem;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
     transition: background 0.3s ease;
 }
+.redirect{
+    background: none;
+}
+.auth-section button:hover {
+    background-color: #1e3a8a;
+}
 
-.hero-button:hover {
-    background-color: #005bb5;
+.toggle {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #cccccc;
+}
+
+.toggle span {
+    color: #61dafb;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.toggle span:hover {
+    text-decoration: underline;
+}
+
+
+@media (max-width: 900px) {
+    .home-container {
+        flex-direction: column;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .hero {
+        padding-right: 0;
+        margin-bottom: 30px;
+    }
+
+    .auth-section{
+        width: 100%;
+        max-width: 400px;
+    }
 }
