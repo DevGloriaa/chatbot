@@ -7,6 +7,7 @@ function Chat() {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState(null);
+    const [currentTopic, setCurrentTopic] = useState("general");
 
 
     useEffect(() => {
@@ -14,13 +15,11 @@ function Chat() {
         document.documentElement.className = savedTheme;
     }, []);
 
-  
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
             setUser(parsedUser);
-
             setMessages([
                 {
                     text: `Hi ${parsedUser.displayName}, what can I do for you today? 🤖`,
@@ -34,57 +33,76 @@ function Chat() {
         }
     }, []);
 
-    const handleSend = async () => {
-        if (!input.trim()) return;
 
-        const userMessage = input.trim();
-        setMessages((prev) => [...prev, { text: userMessage, sender: "user" }]);
-        setInput("");
-        setIsLoading(true);
-
+    const fetchRelevantMemories = async (keyword) => {
         try {
-            const response = await fetch("http://localhost:8000/api/chat", {
+            const res = await fetch(`http://localhost:8080/memories/search/${keyword}`);
+            if (!res.ok) throw new Error("Memory fetch failed");
+            return await res.json();
+        } catch (err) {
+            console.error(err);
+            return [];
+        }
+    };
+
+
+    const getBotReply = async (conversation, memories = []) => {
+        try {
+            const res = await fetch("http://localhost:8000/api/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization:
                         "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJnbG8ub2Jpb3JhaEBnbWFpbC5jb20iLCJpYXQiOjE3NTkwMTMzOTUsImV4cCI6MTc1OTA5OTc5NX0.DdGCr6RjenEzOQ2mKtnU1nAA_g7oOYO0niWVDZWljdE",
                 },
-                body: JSON.stringify({ message: userMessage }),
+                body: JSON.stringify({ conversation, memories }),
             });
 
-            if (!response.ok) throw new Error("API request failed");
+            if (!res.ok) throw new Error("AI API request failed");
+            const data = await res.json();
+            return data.message || "Sorry, I couldn't respond.";
+        } catch (err) {
+            console.error(err);
+            return "⚠️ Sorry, I couldn’t respond. Please try again.";
+        }
+    };
 
-            const data = await response.json();
 
-            if (Array.isArray(data.tasks)) {
-                if (data.tasks.length === 0) {
-                    setMessages((prev) => [
-                        ...prev,
-                        { text: "You don’t have any tasks for today 🎉", sender: "bot" },
-                    ]);
-                } else {
-                    const taskList = data.tasks
-                        .map(
-                            (task, i) =>
-                                `${i + 1}. ${task.title}${
-                                    task.dueDate ? ` (📅 ${task.dueDate})` : ""
-                                }`
-                        )
-                        .join("\n");
+    const handleSend = async () => {
+        if (!input.trim()) return;
 
-                    setMessages((prev) => [
-                        ...prev,
-                        { text: `Here are your tasks for today:\n${taskList}`, sender: "bot" },
-                    ]);
-                }
-            } else {
-                setMessages((prev) => [...prev, { text: data.message, sender: "bot" }]);
-            }
-        } catch (error) {
+        const userMessage = input.trim();
+        setInput("");
+        setIsLoading(true);
+
+        try {
+
+            const conversation = [...messages, { text: userMessage, sender: "user" }];
+
+
+            const relevantMemories = await fetchRelevantMemories(userMessage);
+
+
+            const botReply = await getBotReply(conversation, relevantMemories);
+
+
+            setMessages([...conversation, { text: botReply, sender: "bot" }]);
+
+
+            await fetch("http://localhost:8000/api/memory/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userMessage,
+                    botResponse: botReply,
+                    topic: currentTopic,
+                }),
+            });
+        } catch (err) {
+            console.error(err);
             setMessages((prev) => [
                 ...prev,
-                { text: "⚠️ Sorry, I couldn’t respond. Please try again.", sender: "bot" },
+                { text: "⚠️ Sorry, I couldn’t process your request.", sender: "bot" },
             ]);
         } finally {
             setIsLoading(false);
@@ -100,10 +118,7 @@ function Chat() {
 
             <div className="messages">
                 {messages.map((msg, index) => (
-                    <div
-                        key={index}
-                        className={`message ${msg.sender === "user" ? "user" : "bot"}`}
-                    >
+                    <div key={index} className={`message ${msg.sender === "user" ? "user" : "bot"}`}>
                         {msg.text.split("\n").map((line, i) => (
                             <div key={i}>{line}</div>
                         ))}
