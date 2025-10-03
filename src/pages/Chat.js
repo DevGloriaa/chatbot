@@ -15,6 +15,7 @@ function Chat() {
         document.documentElement.className = savedTheme;
     }, []);
 
+
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
@@ -36,7 +37,7 @@ function Chat() {
 
     const fetchRelevantMemories = async (keyword) => {
         try {
-            const res = await fetch(`http://localhost:8080/memories/search/${keyword}`);
+            const res = await fetch(`http://localhost:8000/api/memory/search/${keyword}`);
             if (!res.ok) throw new Error("Memory fetch failed");
             return await res.json();
         } catch (err) {
@@ -46,27 +47,24 @@ function Chat() {
     };
 
 
-    const getBotReply = async (conversation, memories = []) => {
+    const getBotReply = async (userMessage) => {
         try {
             const res = await fetch("http://localhost:8000/api/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization:
-                        "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJnbG8ub2Jpb3JhaEBnbWFpbC5jb20iLCJpYXQiOjE3NTkwMTMzOTUsImV4cCI6MTc1OTA5OTc5NX0.DdGCr6RjenEzOQ2mKtnU1nAA_g7oOYO0niWVDZWljdE",
                 },
-                body: JSON.stringify({ conversation, memories }),
+                body: JSON.stringify({ message: userMessage }),
             });
 
             if (!res.ok) throw new Error("AI API request failed");
             const data = await res.json();
-            return data.message || "Sorry, I couldn't respond.";
+            return data.text || "Sorry, I couldn't respond.";
         } catch (err) {
             console.error(err);
             return "⚠️ Sorry, I couldn’t respond. Please try again.";
         }
     };
-
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -77,17 +75,16 @@ function Chat() {
 
         try {
 
-            const conversation = [...messages, { text: userMessage, sender: "user" }];
+            setMessages((prev) => [...prev, { text: userMessage, sender: "user" }]);
 
 
             const relevantMemories = await fetchRelevantMemories(userMessage);
 
 
-            const botReply = await getBotReply(conversation, relevantMemories);
+            const botReply = await getBotReply(userMessage);
 
 
-            setMessages([...conversation, { text: botReply, sender: "bot" }]);
-
+            setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
 
             await fetch("http://localhost:8000/api/memory/save", {
                 method: "POST",
@@ -118,7 +115,10 @@ function Chat() {
 
             <div className="messages">
                 {messages.map((msg, index) => (
-                    <div key={index} className={`message ${msg.sender === "user" ? "user" : "bot"}`}>
+                    <div
+                        key={index}
+                        className={`message ${msg.sender === "user" ? "user" : "bot"}`}
+                    >
                         {msg.text.split("\n").map((line, i) => (
                             <div key={i}>{line}</div>
                         ))}

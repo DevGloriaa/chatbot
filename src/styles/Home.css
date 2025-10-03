@@ -126,3 +126,25 @@
         max-width: 400px;
     }
 }
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 35px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+    color:black;
+    font-size: 1.2rem;
+}
+.password-toggle:hover {
+    color: #000;
+}
+

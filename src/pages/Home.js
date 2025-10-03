@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Home.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa"; 
 
 function Home() {
     const [isLogin, setIsLogin] = useState(true);
@@ -10,6 +11,7 @@ function Home() {
         password: "",
     });
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -48,10 +50,8 @@ function Home() {
 
             const data = await response.json();
 
-
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
-
 
             navigate("/chat");
         } catch (err) {
@@ -89,14 +89,23 @@ function Home() {
                             required
                         />
                     )}
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                    />
+                    <div className="password-container">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="Password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                        />
+                        <span
+                            className="password-toggle"
+                            onClick={() => setShowPassword(!showPassword)}
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </span>
+                    </div>
+
                     <button type="submit">
                         {isLogin ? "Login" : "Register"}
                     </button>
@@ -107,7 +116,7 @@ function Home() {
                         {isLogin ? "Don’t have an account?" : "Already have an account?"}{" "}
                         <span onClick={() => setIsLogin(!isLogin)}>
                          {isLogin ? "Register here" : "Login here"}
-                      </span>
+                        </span>
                     </div>
                 </p>
             </div>
