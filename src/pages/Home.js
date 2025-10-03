@@ -6,11 +6,12 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 function Home() {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
-        username: "",
+        email: "",
         displayName: "",
         password: "",
     });
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
@@ -24,6 +25,7 @@ function Home() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setSuccess("");
 
         try {
             const endpoint = isLogin
@@ -44,16 +46,21 @@ function Home() {
                 body: JSON.stringify(body),
             });
 
-            if (!response.ok) {
-                throw new Error("Failed to authenticate");
-            }
-
             const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Authentication failed");
+            }
 
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            navigate("/chat");
+            setSuccess(isLogin ? "Login successful! ✅" : "Registration successful! ✅");
+
+            setTimeout(() => {
+                navigate("/chat");
+            }, 1000);
+
         } catch (err) {
             setError(err.message || "Something went wrong");
         }
@@ -110,12 +117,16 @@ function Home() {
                         {isLogin ? "Login" : "Register"}
                     </button>
                 </form>
+
+
                 {error && <p className="error">{error}</p>}
+                {success && <p className="success">{success}</p>}
+
                 <p>
                     <div className="toggle">
                         {isLogin ? "Don’t have an account?" : "Already have an account?"}{" "}
                         <span onClick={() => setIsLogin(!isLogin)}>
-                         {isLogin ? "Register here" : "Login here"}
+                            {isLogin ? "Register here" : "Login here"}
                         </span>
                     </div>
                 </p>

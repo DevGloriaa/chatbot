@@ -8,7 +8,6 @@ function Chat() {
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState(null);
     const [currentTopic, setCurrentTopic] = useState("general");
-    const [tasks, setTasks] = useState([]);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme") || "light";
@@ -22,22 +21,10 @@ function Chat() {
             setUser(parsedUser);
             setMessages([
                 {
-                    text: `Hi ${parsedUser.email}, what can I do for you today? 🤖`,
+                    text: `Hi ${parsedUser.displayName}, what can I do for you today? 🤖`,
                     sender: "bot",
                 },
             ]);
-
-            // fetch user tasks from Optimus using email + token
-            fetch(`http://localhost:8000/api/tasks?email=${parsedUser.email}`, {
-                headers: {
-                    Authorization: `Bearer ${parsedUser.token}`,
-                },
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    if (data.tasks) setTasks(data.tasks);
-                })
-                .catch((err) => console.error(err));
         } else {
             setMessages([
                 { text: "Hello! I’m Kos 🤖. Please log in to continue.", sender: "bot" },
@@ -56,8 +43,49 @@ function Chat() {
         }
     };
 
+    const fetchTasks = async () => {
+        try {
+            const email = user?.email;
+            const token = user?.token;
+
+            const res = await fetch(`http://localhost:8000/api/tasks?email=${email}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) throw new Error("Failed to fetch tasks");
+            const data = await res.json();
+
+            if (!data.tasks || data.tasks.length === 0) {
+                return "✅ You don't have any tasks for today.";
+            }
+
+            return "Here are your tasks for today:\n- " + data.tasks.join("\n- ");
+        } catch (err) {
+            console.error(err);
+            return "⚠️ Sorry, I couldn’t fetch your tasks right now.";
+        }
+    };
+
+
+    const isTaskQuery = (message) => {
+        const lowered = message.toLowerCase();
+        const taskKeywords = [
+            "task", "tasks", "todo", "to-do", "remind", "pending", "due", "things to do"
+        ];
+        const todayKeywords = ["today", "tonight", "this evening", "this morning"];
+
+        return (
+            taskKeywords.some((kw) => lowered.includes(kw)) &&
+            todayKeywords.some((kw) => lowered.includes(kw))
+        );
+    };
+
     const getBotReply = async (userMessage) => {
         try {
+            if (isTaskQuery(userMessage)) {
+                return await fetchTasks();
+            }
+
             const res = await fetch("http://localhost:8000/api/chat", {
                 method: "POST",
                 headers: {
@@ -134,17 +162,6 @@ function Chat() {
                 ))}
                 {isLoading && <div className="message bot typing">Kos is typing...</div>}
             </div>
-
-            {tasks.length > 0 && (
-                <div className="tasks-section">
-                    <h4>Your tasks:</h4>
-                    <ul>
-                        {tasks.map((t, i) => (
-                            <li key={i}>{t}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
 
             {user && (
                 <div className="input-container">
