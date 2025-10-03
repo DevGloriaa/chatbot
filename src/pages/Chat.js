@@ -8,13 +8,12 @@ function Chat() {
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState(null);
     const [currentTopic, setCurrentTopic] = useState("general");
-
+    const [tasks, setTasks] = useState([]);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme") || "light";
         document.documentElement.className = savedTheme;
     }, []);
-
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -23,17 +22,28 @@ function Chat() {
             setUser(parsedUser);
             setMessages([
                 {
-                    text: `Hi ${parsedUser.displayName}, what can I do for you today? 🤖`,
+                    text: `Hi ${parsedUser.email}, what can I do for you today? 🤖`,
                     sender: "bot",
                 },
             ]);
+
+            // fetch user tasks from Optimus using email + token
+            fetch(`http://localhost:8000/api/tasks?email=${parsedUser.email}`, {
+                headers: {
+                    Authorization: `Bearer ${parsedUser.token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    if (data.tasks) setTasks(data.tasks);
+                })
+                .catch((err) => console.error(err));
         } else {
             setMessages([
                 { text: "Hello! I’m Kos 🤖. Please log in to continue.", sender: "bot" },
             ]);
         }
     }, []);
-
 
     const fetchRelevantMemories = async (keyword) => {
         try {
@@ -46,7 +56,6 @@ function Chat() {
         }
     };
 
-
     const getBotReply = async (userMessage) => {
         try {
             const res = await fetch("http://localhost:8000/api/chat", {
@@ -54,7 +63,10 @@ function Chat() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ message: userMessage }),
+                body: JSON.stringify({
+                    message: userMessage,
+                    email: user?.email,
+                }),
             });
 
             if (!res.ok) throw new Error("AI API request failed");
@@ -74,15 +86,10 @@ function Chat() {
         setIsLoading(true);
 
         try {
-
             setMessages((prev) => [...prev, { text: userMessage, sender: "user" }]);
 
-
             const relevantMemories = await fetchRelevantMemories(userMessage);
-
-
             const botReply = await getBotReply(userMessage);
-
 
             setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
 
@@ -93,6 +100,7 @@ function Chat() {
                     userMessage,
                     botResponse: botReply,
                     topic: currentTopic,
+                    email: user?.email,
                 }),
             });
         } catch (err) {
@@ -126,6 +134,17 @@ function Chat() {
                 ))}
                 {isLoading && <div className="message bot typing">Kos is typing...</div>}
             </div>
+
+            {tasks.length > 0 && (
+                <div className="tasks-section">
+                    <h4>Your tasks:</h4>
+                    <ul>
+                        {tasks.map((t, i) => (
+                            <li key={i}>{t}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             {user && (
                 <div className="input-container">

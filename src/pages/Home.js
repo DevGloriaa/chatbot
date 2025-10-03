@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Home.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; 
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 function Home() {
     const [isLogin, setIsLogin] = useState(true);
@@ -31,9 +31,9 @@ function Home() {
                 : "http://localhost:8000/auth/register";
 
             const body = isLogin
-                ? { username: formData.username, password: formData.password }
+                ? { email: formData.email, password: formData.password }
                 : {
-                    username: formData.username,
+                    email: formData.email,
                     displayName: formData.displayName,
                     password: formData.password,
                 };
@@ -73,9 +73,9 @@ function Home() {
                 <form onSubmit={handleSubmit}>
                     <input
                         type="text"
-                        name="username"
-                        placeholder="Username"
-                        value={formData.username}
+                        name="email"
+                        placeholder="Email"
+                        value={formData.email}
                         onChange={handleChange}
                         required
                     />
