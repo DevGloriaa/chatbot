@@ -46,21 +46,28 @@ function Home() {
                 body: JSON.stringify(body),
             });
 
-            const data = await response.json();
+            let data = {};
+            const text = await response.text();
+            if (text) {
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    throw new Error("Server did not return valid JSON");
+                }
+            }
 
             if (!response.ok) {
-                throw new Error(data.message || "Authentication failed");
+                throw new Error(data.error || data.message || "Authentication failed");
             }
 
             localStorage.setItem("token", data.token);
-            localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("email", data.email);
 
             setSuccess(isLogin ? "Login successful! ✅" : "Registration successful! ✅");
 
             setTimeout(() => {
                 navigate("/chat");
             }, 1000);
-
         } catch (err) {
             setError(err.message || "Something went wrong");
         }
@@ -117,7 +124,6 @@ function Home() {
                         {isLogin ? "Login" : "Register"}
                     </button>
                 </form>
-
 
                 {error && <p className="error">{error}</p>}
                 {success && <p className="success">{success}</p>}

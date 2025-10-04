@@ -43,29 +43,27 @@ function Chat() {
         }
     };
 
-    const fetchTasks = async () => {
+    const fetchTasksForToday = async () => {
         try {
-            const email = user?.email;
-            const token = user?.token;
-
-            const res = await fetch(`http://localhost:8000/api/tasks?email=${email}`, {
+            const token = localStorage.getItem("token"); 
+            const res = await fetch(`http://localhost:8000/api/tasks/today`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             if (!res.ok) throw new Error("Failed to fetch tasks");
             const data = await res.json();
 
-            if (!data.tasks || data.tasks.length === 0) {
-                return "✅ You don't have any tasks for today.";
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                return "✅ You don’t have any tasks for today.";
             }
 
-            return "Here are your tasks for today:\n- " + data.tasks.join("\n- ");
+            return "📋 Here are your tasks for today:\n\n" +
+                data.map((t, i) => `${i + 1}. ${t.title} (Due: ${t.dueDate || "N/A"})`).join("\n");
         } catch (err) {
             console.error(err);
             return "⚠️ Sorry, I couldn’t fetch your tasks right now.";
         }
     };
-
 
     const isTaskQuery = (message) => {
         const lowered = message.toLowerCase();
@@ -83,7 +81,7 @@ function Chat() {
     const getBotReply = async (userMessage) => {
         try {
             if (isTaskQuery(userMessage)) {
-                return await fetchTasks();
+                return await fetchTasksForToday();
             }
 
             const res = await fetch("http://localhost:8000/api/chat", {
