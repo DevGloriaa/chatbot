@@ -15,13 +15,14 @@ function Chat() {
     }, []);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
+        const storedEmail = localStorage.getItem("email");
+        const storedDisplayName = localStorage.getItem("displayName");
+
+        if (storedEmail && storedDisplayName) {
+            setUser({ email: storedEmail, displayName: storedDisplayName });
             setMessages([
                 {
-                    text: `Hi ${parsedUser.displayName}, what can I do for you today? 🤖`,
+                    text: `Hi ${storedDisplayName}, what can I do for you today? 🤖`,
                     sender: "bot",
                 },
             ]);
@@ -34,7 +35,10 @@ function Chat() {
 
     const fetchRelevantMemories = async (keyword) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/memory/search/${keyword}`);
+            const token = localStorage.getItem("token");
+            const res = await fetch(`http://localhost:8000/api/memory/search/${keyword}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
             if (!res.ok) throw new Error("Memory fetch failed");
             return await res.json();
         } catch (err) {
@@ -45,13 +49,21 @@ function Chat() {
 
     const fetchTasksForToday = async () => {
         try {
-            const token = localStorage.getItem("token"); 
-            const res = await fetch(`http://localhost:8000/api/tasks/today`, {
+            const token = localStorage.getItem("token");
+            if (!token) throw new Error("No token found");
+
+            const res = await fetch("http://localhost:8081/tasks/today", {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             if (!res.ok) throw new Error("Failed to fetch tasks");
-            const data = await res.json();
+
+            let data;
+            try {
+                data = await res.json();
+            } catch {
+                return "⚠️ Invalid response from Optimus backend";
+            }
 
             if (!data || !Array.isArray(data) || data.length === 0) {
                 return "✅ You don’t have any tasks for today.";
@@ -59,9 +71,10 @@ function Chat() {
 
             return "📋 Here are your tasks for today:\n\n" +
                 data.map((t, i) => `${i + 1}. ${t.title} (Due: ${t.dueDate || "N/A"})`).join("\n");
+
         } catch (err) {
             console.error(err);
-            return "⚠️ Sorry, I couldn’t fetch your tasks right now.";
+            return "⚠️ Sorry, I couldn’t fetch your tasks right now. Make sure you’re logged in.";
         }
     };
 
@@ -84,10 +97,12 @@ function Chat() {
                 return await fetchTasksForToday();
             }
 
+            const token = localStorage.getItem("token");
             const res = await fetch("http://localhost:8000/api/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     message: userMessage,
@@ -96,7 +111,14 @@ function Chat() {
             });
 
             if (!res.ok) throw new Error("AI API request failed");
-            const data = await res.json();
+
+            let data;
+            try {
+                data = await res.json();
+            } catch {
+                return "⚠️ Invalid response from server";
+            }
+
             return data.text || "Sorry, I couldn't respond.";
         } catch (err) {
             console.error(err);
@@ -119,9 +141,13 @@ function Chat() {
 
             setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
 
+            const token = localStorage.getItem("token");
             await fetch("http://localhost:8000/api/memory/save", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     userMessage,
                     botResponse: botReply,
