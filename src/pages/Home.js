@@ -57,16 +57,22 @@ function Home() {
                 throw new Error(data.error || data.message || "Authentication failed");
             }
 
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("email", data.email);
-            localStorage.setItem("displayName", data.displayName || "");
+            if (isLogin) {
 
-            setSuccess(isLogin ? "Login successful! ✅" : "Registration successful! ✅");
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("email", data.email);
+                localStorage.setItem("displayName", data.displayName || "");
 
-            setTimeout(() => {
-                navigate("/chat");
-            }, 1000);
+                setSuccess("Login successful! ✅");
+                setTimeout(() => navigate("/chat"), 1000);
+            } else {
 
+                setSuccess("Registration successful! ✅ Redirecting... ");
+                setTimeout(() => {
+                    setIsLogin(true);
+                    navigate("/");
+                }, 1500);
+            }
         } catch (err) {
             setError(err.message || "Something went wrong");
         }
@@ -127,14 +133,12 @@ function Home() {
                 {error && <p className="error">{error}</p>}
                 {success && <p className="success">{success}</p>}
 
-                <p>
-                    <div className="toggle">
-                        {isLogin ? "Don’t have an account?" : "Already have an account?"}{" "}
-                        <span onClick={() => setIsLogin(!isLogin)}>
-                            {isLogin ? "Register here" : "Login here"}
-                        </span>
-                    </div>
-                </p>
+                <div className="toggle">
+                    {isLogin ? "Don’t have an account?" : "Already have an account?"}{" "}
+                    <span onClick={() => setIsLogin(!isLogin)}>
+                        {isLogin ? "Register here" : "Login here"}
+                    </span>
+                </div>
             </div>
         </div>
     );
