@@ -11,6 +11,10 @@ function Chat() {
     const [currentTopic, setCurrentTopic] = useState("general");
     const messagesEndRef = useRef(null);
 
+
+    const TASK_API = "https://taskmanagerapi-1-142z.onrender.com/api";
+    const OPTIMUS_API = "http://localhost:8000/api";
+
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
@@ -44,18 +48,25 @@ function Chat() {
     const fetchTasksForToday = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:8000/api/tasks/today", {
-                headers: { Authorization: `Bearer ${token}` },
+            const res = await fetch(`${TASK_API}/tasks/today`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
             });
-            if (!res.ok) throw new Error("Failed to fetch tasks");
+
+            if (!res.ok) throw new Error(`Failed to fetch tasks: ${res.status}`);
+
             const data = await res.json();
             if (!data || !Array.isArray(data) || data.length === 0) {
                 return "✅ You don’t have any tasks for today.";
             }
+
             return "📋 **Here are your tasks for today:**\n\n" +
                 data.map((t, i) => `${i + 1}. ${t.title}`).join("\n");
         } catch (err) {
-            console.error(err);
+            console.error("fetchTasksForToday error:", err);
             return "⚠️ Sorry, I couldn’t fetch your tasks right now.";
         }
     };
@@ -63,9 +74,12 @@ function Chat() {
     const getBotReply = async (userMessage) => {
         try {
             const token = localStorage.getItem("token");
-            if (isTaskQuery(userMessage)) return await fetchTasksForToday();
 
-            const res = await fetch("http://localhost:8000/api/chat", {
+            if (isTaskQuery(userMessage)) {
+                return await fetchTasksForToday();
+            }
+
+            const res = await fetch(`${OPTIMUS_API}/chat`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -75,10 +89,11 @@ function Chat() {
             });
 
             if (!res.ok) throw new Error("AI API request failed");
+
             const data = await res.json();
             return data.text || "⚠️ Sorry, I couldn’t respond.";
         } catch (err) {
-            console.error(err);
+            console.error("getBotReply error:", err);
             return "⚠️ Sorry, I couldn’t respond. Please try again.";
         }
     };
@@ -91,7 +106,11 @@ function Chat() {
                 const updated = [...prev];
                 const typingIndex = updated.findIndex((m) => m.typing);
                 if (typingIndex !== -1) {
-                    updated[typingIndex] = { text: fullText.slice(0, i + 1), sender: "bot", typing: true };
+                    updated[typingIndex] = {
+                        text: fullText.slice(0, i + 1),
+                        sender: "bot",
+                        typing: true,
+                    };
                 }
                 return updated;
             });
@@ -118,7 +137,7 @@ function Chat() {
             await typeBotMessage(botReply);
 
             const token = localStorage.getItem("token");
-            await fetch("http://localhost:8000/api/memory/save", {
+            await fetch(`${OPTIMUS_API}/memory/save`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -132,7 +151,7 @@ function Chat() {
                 }),
             });
         } catch (err) {
-            console.error(err);
+            console.error("handleSend error:", err);
             setMessages((prev) => [
                 ...prev,
                 { text: "⚠️ Sorry, I couldn’t process your request.", sender: "bot" },
@@ -152,7 +171,11 @@ function Chat() {
                     <div
                         key={index}
                         className={`message-bubble ${
-                            msg.sender === "user" ? "user-bubble" : msg.typing ? "typing-bubble" : "bot-bubble"
+                            msg.sender === "user"
+                                ? "user-bubble"
+                                : msg.typing
+                                    ? "typing-bubble"
+                                    : "bot-bubble"
                         }`}
                     >
                         {msg.typing ? (
