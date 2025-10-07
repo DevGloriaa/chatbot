@@ -15,20 +15,24 @@ function Chat() {
     const TASK_API = "https://taskmanagerapi-1-142z.onrender.com/api";
     const OPTIMUS_API = "http://localhost:8000/api";
 
+
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
 
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme") || "light";
         document.documentElement.className = savedTheme;
     }, []);
 
+
     useEffect(() => {
         const storedEmail = localStorage.getItem("email");
         const storedDisplayName = localStorage.getItem("displayName");
+        const storedToken = localStorage.getItem("token");
 
-        if (storedEmail && storedDisplayName) {
+        if (storedEmail && storedDisplayName && storedToken) {
             setUser({ email: storedEmail, displayName: storedDisplayName });
             setMessages([
                 { text: `Hi ${storedDisplayName}, what can I do for you today? 🤖`, sender: "bot" },
@@ -48,10 +52,12 @@ function Chat() {
     const fetchTasksForToday = async () => {
         try {
             const token = localStorage.getItem("token");
+            if (!token) return "⚠️ Please log in to fetch your tasks.";
+
             const res = await fetch(`${TASK_API}/tasks/today`, {
                 method: "GET",
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
             });
@@ -59,7 +65,7 @@ function Chat() {
             if (!res.ok) throw new Error(`Failed to fetch tasks: ${res.status}`);
 
             const data = await res.json();
-            if (!data || !Array.isArray(data) || data.length === 0) {
+            if (!Array.isArray(data) || data.length === 0) {
                 return "✅ You don’t have any tasks for today.";
             }
 
@@ -73,22 +79,23 @@ function Chat() {
 
     const getBotReply = async (userMessage) => {
         try {
-            const token = localStorage.getItem("token");
-
             if (isTaskQuery(userMessage)) {
                 return await fetchTasksForToday();
             }
+
+            const token = localStorage.getItem("token");
+            if (!token) return "⚠️ Please log in to chat with Kos.";
 
             const res = await fetch(`${OPTIMUS_API}/chat`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
+                    Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
                 },
                 body: JSON.stringify({ message: userMessage, email: user?.email }),
             });
 
-            if (!res.ok) throw new Error("AI API request failed");
+            if (!res.ok) throw new Error(`AI API request failed: ${res.status}`);
 
             const data = await res.json();
             return data.text || "⚠️ Sorry, I couldn’t respond.";
@@ -137,11 +144,13 @@ function Chat() {
             await typeBotMessage(botReply);
 
             const token = localStorage.getItem("token");
+            if (!token) return;
+
             await fetch(`${OPTIMUS_API}/memory/save`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
+                    Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     userMessage,
