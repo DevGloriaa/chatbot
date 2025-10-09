@@ -11,21 +11,17 @@ function Chat() {
     const [currentTopic, setCurrentTopic] = useState("general");
     const messagesEndRef = useRef(null);
 
-
     const TASK_API = "https://taskmanagerapi-1-142z.onrender.com/api";
     const OPTIMUS_API = "http://localhost:8000/api";
-
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme") || "light";
         document.documentElement.className = savedTheme;
     }, []);
-
 
     useEffect(() => {
         const storedEmail = localStorage.getItem("email");
@@ -42,6 +38,33 @@ function Chat() {
         }
     }, []);
 
+    // Decode JWT locally
+    function parseJwt(token) {
+        try {
+            return JSON.parse(atob(token.split('.')[1]));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    const isTokenValidLocally = () => {
+        const token = localStorage.getItem("token");
+        if (!token) return false;
+
+        const decoded = parseJwt(token);
+        if (!decoded || !decoded.exp) return false;
+
+        const now = Math.floor(Date.now() / 1000);
+        return decoded.exp > now;
+    };
+
+    const clearTokenAndLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("email");
+        localStorage.removeItem("displayName");
+        setUser(null);
+    };
+
     const isTaskQuery = (message) => {
         const lowered = message.toLowerCase();
         const taskKeywords = ["task", "tasks", "todo", "to-do", "remind", "pending", "things to do"];
@@ -50,10 +73,13 @@ function Chat() {
     };
 
     const fetchTasksForToday = async () => {
+        if (!isTokenValidLocally()) {
+            clearTokenAndLogout();
+            return "⚠️ Your session has expired. Please log in again.";
+        }
+
         try {
             const token = localStorage.getItem("token");
-            if (!token) return "⚠️ Please log in to fetch your tasks.";
-
             const res = await fetch(`${TASK_API}/tasks/today`, {
                 method: "GET",
                 headers: {
@@ -79,13 +105,14 @@ function Chat() {
 
     const getBotReply = async (userMessage) => {
         try {
-            if (isTaskQuery(userMessage)) {
-                return await fetchTasksForToday();
+            if (!isTokenValidLocally()) {
+                clearTokenAndLogout();
+                return "⚠️ Your session has expired. Please log in again.";
             }
 
-            const token = localStorage.getItem("token");
-            if (!token) return "⚠️ Please log in to chat with Kos.";
+            if (isTaskQuery(userMessage)) return await fetchTasksForToday();
 
+            const token = localStorage.getItem("token");
             const res = await fetch(`${OPTIMUS_API}/chat`, {
                 method: "POST",
                 headers: {
@@ -106,6 +133,11 @@ function Chat() {
     };
 
     const typeBotMessage = async (fullText) => {
+        if (fullText.includes("session has expired")) {
+            setMessages((prev) => [...prev, { text: fullText, sender: "bot" }]);
+            return;
+        }
+
         setMessages((prev) => [...prev, { text: null, sender: "bot", typing: true }]);
         for (let i = 0; i < fullText.length; i++) {
             await new Promise((resolve) => setTimeout(resolve, 15));
@@ -143,9 +175,9 @@ function Chat() {
             const botReply = await getBotReply(userMessage);
             await typeBotMessage(botReply);
 
-            const token = localStorage.getItem("token");
-            if (!token) return;
+            if (!isTokenValidLocally()) return;
 
+            const token = localStorage.getItem("token");
             await fetch(`${OPTIMUS_API}/memory/save`, {
                 method: "POST",
                 headers: {
