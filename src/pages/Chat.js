@@ -11,8 +11,7 @@ function Chat() {
     const [currentTopic, setCurrentTopic] = useState("general");
     const messagesEndRef = useRef(null);
 
-    const TASK_API = "https://taskmanagerapi-1-142z.onrender.com/api";
-    const OPTIMUS_API = "http://localhost:8000/api";
+    const KOS_API = "http://localhost:8000/api";
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -30,32 +29,27 @@ function Chat() {
 
         if (storedEmail && storedDisplayName && storedToken) {
             setUser({ email: storedEmail, displayName: storedDisplayName });
-            setMessages([
-                { text: `Hi ${storedDisplayName}, what can I do for you today? 🤖`, sender: "bot" },
-            ]);
+            setMessages([{ text: `Hi ${storedDisplayName}, what can I do for you today? 🤖`, sender: "bot" }]);
         } else {
             setMessages([{ text: "Hello! I’m Kos 🤖. Please log in to continue.", sender: "bot" }]);
         }
     }, []);
 
-    // Decode JWT locally
-    function parseJwt(token) {
+    const parseJwt = (token) => {
         try {
-            return JSON.parse(atob(token.split('.')[1]));
-        } catch (e) {
+            return JSON.parse(atob(token.split(".")[1]));
+        } catch {
             return null;
         }
-    }
+    };
+
 
     const isTokenValidLocally = () => {
         const token = localStorage.getItem("token");
         if (!token) return false;
-
         const decoded = parseJwt(token);
         if (!decoded || !decoded.exp) return false;
-
-        const now = Math.floor(Date.now() / 1000);
-        return decoded.exp > now;
+        return decoded.exp > Math.floor(Date.now() / 1000);
     };
 
     const clearTokenAndLogout = () => {
@@ -63,7 +57,9 @@ function Chat() {
         localStorage.removeItem("email");
         localStorage.removeItem("displayName");
         setUser(null);
+        setMessages([{ text: "⚠️ Your session has expired. Please log in again.", sender: "bot" }]);
     };
+
 
     const isTaskQuery = (message) => {
         const lowered = message.toLowerCase();
@@ -71,6 +67,7 @@ function Chat() {
         const todayKeywords = ["today", "tonight", "this evening", "this morning"];
         return taskKeywords.some((kw) => lowered.includes(kw)) && todayKeywords.some((kw) => lowered.includes(kw));
     };
+
 
     const fetchTasksForToday = async () => {
         if (!isTokenValidLocally()) {
@@ -80,28 +77,26 @@ function Chat() {
 
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${TASK_API}/tasks/today`, {
+            const res = await fetch(`${KOS_API}/tasks/today`, {
                 method: "GET",
                 headers: {
-                    Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
-                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
                 },
             });
 
-            if (!res.ok) throw new Error(`Failed to fetch tasks: ${res.status}`);
-
-            const data = await res.json();
-            if (!Array.isArray(data) || data.length === 0) {
-                return "✅ You don’t have any tasks for today.";
+            if (!res.ok) {
+                console.error("Fetch tasks error:", res.status);
+                throw new Error(`Failed to fetch tasks: ${res.status}`);
             }
 
-            return "📋 **Here are your tasks for today:**\n\n" +
-                data.map((t, i) => `${i + 1}. ${t.title}`).join("\n");
+            const data = await res.text();
+            return data && data.trim() !== "" ? data : "✅ You have no tasks for today!";
         } catch (err) {
             console.error("fetchTasksForToday error:", err);
             return "⚠️ Sorry, I couldn’t fetch your tasks right now.";
         }
     };
+
 
     const getBotReply = async (userMessage) => {
         try {
@@ -110,20 +105,23 @@ function Chat() {
                 return "⚠️ Your session has expired. Please log in again.";
             }
 
-            if (isTaskQuery(userMessage)) return await fetchTasksForToday();
+
+            if (isTaskQuery(userMessage)) {
+                return await fetchTasksForToday();
+            }
+
 
             const token = localStorage.getItem("token");
-            const res = await fetch(`${OPTIMUS_API}/chat`, {
+            const res = await fetch(`${KOS_API}/chat`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ message: userMessage, email: user?.email }),
             });
 
             if (!res.ok) throw new Error(`AI API request failed: ${res.status}`);
-
             const data = await res.json();
             return data.text || "⚠️ Sorry, I couldn’t respond.";
         } catch (err) {
@@ -132,24 +130,21 @@ function Chat() {
         }
     };
 
+
     const typeBotMessage = async (fullText) => {
         if (fullText.includes("session has expired")) {
             setMessages((prev) => [...prev, { text: fullText, sender: "bot" }]);
             return;
         }
 
-        setMessages((prev) => [...prev, { text: null, sender: "bot", typing: true }]);
+        setMessages((prev) => [...prev, { text: "", sender: "bot", typing: true }]);
         for (let i = 0; i < fullText.length; i++) {
             await new Promise((resolve) => setTimeout(resolve, 15));
             setMessages((prev) => {
                 const updated = [...prev];
                 const typingIndex = updated.findIndex((m) => m.typing);
                 if (typingIndex !== -1) {
-                    updated[typingIndex] = {
-                        text: fullText.slice(0, i + 1),
-                        sender: "bot",
-                        typing: true,
-                    };
+                    updated[typingIndex] = { text: fullText.slice(0, i + 1), sender: "bot", typing: true };
                 }
                 return updated;
             });
@@ -157,12 +152,11 @@ function Chat() {
         setMessages((prev) => {
             const updated = [...prev];
             const typingIndex = updated.findIndex((m) => m.typing);
-            if (typingIndex !== -1) {
-                updated[typingIndex] = { text: fullText, sender: "bot" };
-            }
+            if (typingIndex !== -1) updated[typingIndex] = { text: fullText, sender: "bot" };
             return updated;
         });
     };
+
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -178,11 +172,11 @@ function Chat() {
             if (!isTokenValidLocally()) return;
 
             const token = localStorage.getItem("token");
-            await fetch(`${OPTIMUS_API}/memory/save`, {
+            await fetch(`${KOS_API}/memory/save`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     userMessage,
@@ -193,10 +187,7 @@ function Chat() {
             });
         } catch (err) {
             console.error("handleSend error:", err);
-            setMessages((prev) => [
-                ...prev,
-                { text: "⚠️ Sorry, I couldn’t process your request.", sender: "bot" },
-            ]);
+            setMessages((prev) => [...prev, { text: "⚠️ Sorry, I couldn’t process your request.", sender: "bot" }]);
         }
     };
 
@@ -243,9 +234,7 @@ function Chat() {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
                     />
-                    <button onClick={handleSend} className="send-button">
-                        Send
-                    </button>
+                    <button onClick={handleSend} className="send-button">Send</button>
                 </div>
             )}
         </div>
