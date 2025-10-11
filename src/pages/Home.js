@@ -15,6 +15,9 @@ function Home() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
+
+    const BASE_URL = "https://chatbotapi-gw0e.onrender.com";
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -29,8 +32,8 @@ function Home() {
 
         try {
             const endpoint = isLogin
-                ? "http://localhost:8000/auth/login"
-                : "http://localhost:8000/auth/register";
+                ? `${BASE_URL}/auth/login`
+                : `${BASE_URL}/auth/register`;
 
             const body = isLogin
                 ? { email: formData.email, password: formData.password }
@@ -58,7 +61,6 @@ function Home() {
             }
 
             if (isLogin) {
-
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("email", data.email);
                 localStorage.setItem("displayName", data.displayName || "");
@@ -66,8 +68,7 @@ function Home() {
                 setSuccess("Login successful! ✅");
                 setTimeout(() => navigate("/chat"), 1000);
             } else {
-
-                setSuccess("Registration successful! ✅ Redirecting... ");
+                setSuccess("Registration successful! ✅ Redirecting...");
                 setTimeout(() => {
                     setIsLogin(true);
                     navigate("/");
