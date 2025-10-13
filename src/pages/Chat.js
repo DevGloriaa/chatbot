@@ -11,7 +11,7 @@ function Chat() {
     const [currentTopic, setCurrentTopic] = useState("general");
     const messagesEndRef = useRef(null);
 
-    const KOS_API = "https://taskmanagerapi-2-s90z.onrender.com";
+    const KOS_API = "https://chatbotapi-gw0e.onrender.com/api";
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
