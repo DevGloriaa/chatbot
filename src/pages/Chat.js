@@ -11,16 +11,21 @@ function Chat() {
     const [currentTopic, setCurrentTopic] = useState("general");
     const messagesEndRef = useRef(null);
 
+
     const KOS_API = "https://chatbotapi-gw0e.onrender.com/api";
+    const OPTIMUS_API = "https://taskmanagerapi-2-s90z.onrender.com";
+
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
+
     useEffect(() => {
         const savedTheme = localStorage.getItem("theme") || "light";
         document.documentElement.className = savedTheme;
     }, []);
+
 
     useEffect(() => {
         const storedEmail = localStorage.getItem("email");
@@ -34,6 +39,7 @@ function Chat() {
             setMessages([{ text: "Hello! I’m Kos 🤖. Please log in to continue.", sender: "bot" }]);
         }
     }, []);
+
 
     const parseJwt = (token) => {
         try {
@@ -77,10 +83,12 @@ function Chat() {
 
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${KOS_API}/tasks/today`, {
+
+            const res = await fetch(`${OPTIMUS_API}/tasks/today`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
                 },
             });
 
@@ -89,8 +97,20 @@ function Chat() {
                 throw new Error(`Failed to fetch tasks: ${res.status}`);
             }
 
-            const data = await res.text();
-            return data && data.trim() !== "" ? data : "✅ You have no tasks for today!";
+            const data = await res.json();
+
+            if (!data || data.length === 0) {
+                return "✅ You don’t have any tasks today — looks like a free day! 🎉";
+            }
+
+
+            let message = `📅 You’ve got ${data.length} task${data.length > 1 ? "s" : ""} today:\n\n`;
+            data.forEach((task, index) => {
+                message += `${index + 1}. **${task.title}**\n`;
+            });
+
+            message += "\n💪 You’ve got this!";
+            return message;
         } catch (err) {
             console.error("fetchTasksForToday error:", err);
             return "⚠️ Sorry, I couldn’t fetch your tasks right now.";
@@ -156,7 +176,6 @@ function Chat() {
             return updated;
         });
     };
-
 
     const handleSend = async () => {
         if (!input.trim()) return;
