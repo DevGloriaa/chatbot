@@ -13,8 +13,8 @@ function Home() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-
 
     const BASE_URL = "https://chatbotapi-gw0e.onrender.com";
 
@@ -29,6 +29,7 @@ function Home() {
         e.preventDefault();
         setError("");
         setSuccess("");
+        setLoading(true);
 
         try {
             const endpoint = isLogin
@@ -76,6 +77,8 @@ function Home() {
             }
         } catch (err) {
             setError(err.message || "Something went wrong");
+        } finally {
+            setLoading(false); // 🟢 Stop loader
         }
     };
 
@@ -126,8 +129,16 @@ function Home() {
                         </span>
                     </div>
 
-                    <button type="submit">
-                        {isLogin ? "Login" : "Register"}
+
+                    <button type="submit" disabled={loading}>
+                        {loading ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <span className="loader"></span>
+                                {isLogin ? "Logging in..." : "Registering..."}
+                            </div>
+                        ) : (
+                            isLogin ? "Login" : "Register"
+                        )}
                     </button>
                 </form>
 
